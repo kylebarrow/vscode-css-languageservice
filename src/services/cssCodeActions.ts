@@ -9,27 +9,39 @@ import { difference } from '../utils/strings.js';
 import { Rules } from '../services/lintRules.js';
 import {
 	Range, CodeActionContext, Diagnostic, Command, TextEdit, CodeAction, WorkspaceEdit, CodeActionKind,
-	TextDocumentEdit, VersionedTextDocumentIdentifier, TextDocument, ICSSDataProvider
+	TextDocumentEdit, VersionedTextDocumentIdentifier, TextDocument, ClientCapabilities
 } from '../cssLanguageTypes.js';
 import * as l10n from '@vscode/l10n';
+import { CSSValidation } from './cssValidation.js';
 import { CSSDataManager } from '../languageFacts/dataManager.js';
 
 export class CSSCodeActions {
 
-	constructor(private readonly cssDataManager: CSSDataManager) {
+	constructor(private readonly cssDataManager: CSSDataManager, private readonly validation: CSSValidation, private readonly clientCapabilities?: ClientCapabilities) {
 	}
 
 	public doCodeActions(document: TextDocument, range: Range, context: CodeActionContext, stylesheet: nodes.Stylesheet): Command[] {
 		return this.doCodeActions2(document, range, context, stylesheet).map(ca => {
 			const textDocumentEdit: TextDocumentEdit | undefined = ca.edit && ca.edit.documentChanges && ca.edit.documentChanges[0] as TextDocumentEdit;
-			return Command.create(ca.title, '_css.applyCodeAction', document.uri, document.version, textDocumentEdit && textDocumentEdit.edits);
+			return Command.create(ca.title, '_css.applyCodeAction', document.uri, document.version, textDocumentEdit?.edits ?? ca.edit?.changes?.[document.uri]);
 		});
 	}
 
+	/** Compute quick fixes, validating the selected range when the client omits diagnostics. */
 	public doCodeActions2(document: TextDocument, range: Range, context: CodeActionContext, stylesheet: nodes.Stylesheet): CodeAction[] {
 		const result: CodeAction[] = [];
-		if (context.diagnostics) {
-			for (const diagnostic of context.diagnostics) {
+		if (context.only && !context.only.some(kind => kind === '' || kind === CodeActionKind.QuickFix)) {
+			return result;
+		}
+		const diagnostics = context.diagnostics.length > 0 ? context.diagnostics : this.validation.doValidation(document, stylesheet).filter(diagnostic => {
+			const start = document.offsetAt(diagnostic.range.start);
+			const end = document.offsetAt(diagnostic.range.end);
+			const selectionStart = document.offsetAt(range.start);
+			const selectionEnd = document.offsetAt(range.end);
+			return selectionStart === selectionEnd ? start <= selectionStart && selectionStart <= end : start < selectionEnd && selectionStart < end;
+		});
+		if (diagnostics.length > 0) {
+			for (const diagnostic of diagnostics) {
 				this.appendFixesForMarker(document, stylesheet, diagnostic, result);
 			}
 		}
@@ -64,7 +76,10 @@ export class CSSCodeActions {
 			const title = l10n.t("Rename to '{0}'", propertyName);
 			const edit = TextEdit.replace(marker.range, propertyName);
 			const documentIdentifier = VersionedTextDocumentIdentifier.create(document.uri, document.version);
-			const workspaceEdit: WorkspaceEdit = { documentChanges: [TextDocumentEdit.create(documentIdentifier, [edit])] };
+			// Preserve the historical representation when library callers omit capabilities.
+			const workspaceEdit: WorkspaceEdit = this.clientCapabilities === undefined || this.clientCapabilities.workspace?.workspaceEdit?.documentChanges === true
+				? { documentChanges: [TextDocumentEdit.create(documentIdentifier, [edit])] }
+				: { changes: { [document.uri]: [edit] } };
 			const codeAction = CodeAction.create(title, workspaceEdit, CodeActionKind.QuickFix);
 			codeAction.diagnostics = [marker];
 			result.push(codeAction);

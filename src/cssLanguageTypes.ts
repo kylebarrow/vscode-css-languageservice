@@ -103,6 +103,12 @@ export interface DocumentContext {
  * Describes what LSP capabilities the client supports
  */
 export interface ClientCapabilities {
+	/** Workspace edit representations supported by the client. */
+	workspace?: {
+		workspaceEdit?: {
+			documentChanges?: boolean;
+		};
+	};
 	/**
 	 * The text document client capabilities
 	 */

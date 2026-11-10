@@ -75,3 +75,29 @@ suite('CSS - Code Actions', () => {
 		]);
 	});
 });
+
+suite('CSS - Standalone client actions', () => {
+	for (const documentChanges of [false, true]) {
+		test(`empty contexts and workspace edits (${documentChanges})`, () => {
+			const ls = getCSSLanguageService({ clientCapabilities: { workspace: { workspaceEdit: { documentChanges } } } });
+			const document = TextDocument.create('file:///test.css', 'css', 7, 'a { displai: block; colr: red; }');
+			const stylesheet = ls.parseStylesheet(document);
+			const range = Range.create(0, 6, 0, 6);
+			const actions = ls.doCodeActions2(document, range, { diagnostics: [] }, stylesheet);
+			const action = actions.find(item => item.title === "Rename to 'display'")!;
+			assert.ok(action);
+			assert.equal(Boolean(action.edit?.documentChanges), documentChanges);
+			const edits = documentChanges ? (action.edit!.documentChanges![0] as TextDocumentEdit).edits as TextEdit[] : action.edit!.changes![document.uri];
+			assert.equal(TextDocument.applyEdits(document, edits), 'a { display: block; colr: red; }');
+			assert.ok(actions.every(item => item.diagnostics![0].range.start.character === 4));
+			assert.deepEqual(ls.doCodeActions2(document, Range.create(0, 0, 0, 1), { diagnostics: [] }, stylesheet), []);
+			assert.deepEqual(ls.doCodeActions2(document, range, { diagnostics: [], only: ['refactor'] }, stylesheet), []);
+			const command = ls.doCodeActions(document, range, { diagnostics: [] }, stylesheet).find(item => item.title === action.title)!;
+			assert.deepEqual(command.arguments![2], edits);
+			ls.configure({ lint: { unknownProperties: 'ignore' } });
+			assert.deepEqual(ls.doCodeActions2(document, range, { diagnostics: [] }, stylesheet), []);
+			ls.configure({ validate: false });
+			assert.deepEqual(ls.doCodeActions2(document, range, { diagnostics: [] }, stylesheet), []);
+		});
+	}
+});

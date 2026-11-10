@@ -1,0 +1,8 @@
+{
+  "name": "bbedit-css-language-server",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": { "start": "node cssServer.mjs --stdio", "test": "node --test test/*.test.mjs" },
+  "dependencies": { "vscode-languageserver": "9.0.1" }
+}

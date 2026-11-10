@@ -112,39 +112,42 @@ const defaultLanguageServiceOptions = {};
 
 export function getCSSLanguageService(options: LanguageServiceOptions = defaultLanguageServiceOptions): LanguageService {
 	const cssDataManager = new CSSDataManager(options);
+	const validation = new CSSValidation(cssDataManager);
 	return createFacade(
 		new Parser(),
 		new CSSCompletion(null, options, cssDataManager),
 		new CSSHover(options && options.clientCapabilities, cssDataManager),
 		new CSSNavigation(options && options.fileSystemProvider, true),
-		new CSSCodeActions(cssDataManager),
-		new CSSValidation(cssDataManager),
+		new CSSCodeActions(cssDataManager, validation, options.clientCapabilities),
+		validation,
 		cssDataManager
 	);
 }
 
 export function getSCSSLanguageService(options: LanguageServiceOptions = defaultLanguageServiceOptions): LanguageService {
 	const cssDataManager = new CSSDataManager(options);
+	const validation = new CSSValidation(cssDataManager);
 	return createFacade(
 		new SCSSParser(),
 		new SCSSCompletion(options, cssDataManager),
 		new CSSHover(options && options.clientCapabilities, cssDataManager),
 		new SCSSNavigation(options && options.fileSystemProvider),
-		new CSSCodeActions(cssDataManager),
-		new CSSValidation(cssDataManager),
+		new CSSCodeActions(cssDataManager, validation, options.clientCapabilities),
+		validation,
 		cssDataManager
 	);
 }
 
 export function getLESSLanguageService(options: LanguageServiceOptions = defaultLanguageServiceOptions): LanguageService {
 	const cssDataManager = new CSSDataManager(options);
+	const validation = new CSSValidation(cssDataManager);
 	return createFacade(
 		new LESSParser(),
 		new LESSCompletion(options, cssDataManager),
 		new CSSHover(options && options.clientCapabilities, cssDataManager),
 		new CSSNavigation(options && options.fileSystemProvider, true),
-		new CSSCodeActions(cssDataManager),
-		new CSSValidation(cssDataManager),
+		new CSSCodeActions(cssDataManager, validation, options.clientCapabilities),
+		validation,
 		cssDataManager
 	);
 }

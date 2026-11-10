@@ -1,3 +1,9 @@
+## Unreleased — BBEdit compatibility
+
+- Support range-scoped quick fixes when clients omit diagnostic context.
+- Honor client workspace-edit capabilities while preserving the legacy command API.
+- Add an optional standalone CSS server, BBEdit setup guide and regression tests.
+
 7.0.0-next.1 / 2026-03-04
 =========================
  * BREAKING: package is now ESM-only (`"type": "module"`) and no longer publishes `lib/umd` output

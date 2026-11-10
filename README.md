@@ -1,6 +1,8 @@
 # vscode-css-languageservice
 Language services for CSS, LESS and SCSS
 
+This fork includes BBEdit-compatible quick fixes and an optional CSS LSP adapter. See [BBEdit setup](docs/bbedit.md).
+
 [![npm Package](https://img.shields.io/npm/v/vscode-css-languageservice.svg?style=flat-square)](https://www.npmjs.org/package/vscode-css-languageservice)
 [![NPM Downloads](https://img.shields.io/npm/dm/vscode-css-languageservice.svg)](https://npmjs.org/package/vscode-css-languageservice)
 [![Build Status](https://github.com/microsoft/vscode-css-languageservice/actions/workflows/node.js.yml/badge.svg)](https://github.com/microsoft/vscode-css-languageservice/actions)
