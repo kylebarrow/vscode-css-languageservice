@@ -3,6 +3,7 @@
 - Support range-scoped quick fixes when clients omit diagnostic context.
 - Honor client workspace-edit capabilities while preserving the legacy command API.
 - Add an optional standalone CSS server, BBEdit setup guide and regression tests.
+- Include an optional Allman formatting preset and BBEdit installation instructions.
 
 7.0.0-next.1 / 2026-03-04
 =========================

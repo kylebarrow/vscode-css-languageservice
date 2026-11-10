@@ -23,9 +23,33 @@ In Settings → Languages → Custom Settings, select **CSS**, then edit its **S
 - Command: your absolute Node.js path (`command -v node`).
 - Arguments: `/absolute/path/to/vscode-css-languageservice/server/cssServer.mjs --stdio`
 - Language ID: `css`.
-- Configuration: `Default`.
+- Configuration: `Default`, or `CSS-Allman` after installing the optional preset below.
 
 The adapter supports push diagnostics, property-name quick fixes, document/range formatting, completion and hover. It does not advertise navigation, rename, workspace indexing, filesystem path completion, custom data loading or SCSS/LESS support. The underlying library retains its existing CSS/SCSS/LESS APIs. Remove the CSS custom server setting to undo this installation.
+
+## Optional Allman formatting
+
+The included [CSS-Allman.json](CSS-Allman.json) preset puts opening braces on their own lines. From the checkout root, copy it into BBEdit's configuration folder:
+
+```sh
+mkdir -p "$HOME/Library/Application Support/BBEdit/Language Servers/Configuration"
+cp -i docs/CSS-Allman.json "$HOME/Library/Application Support/BBEdit/Language Servers/Configuration/"
+```
+
+In **Settings → Languages → Custom Settings → CSS → Server**, choose **CSS-Allman** from the **Configuration** menu and click **OK**. If the new preset does not appear or take effect, restart BBEdit and select it again.
+
+Use **Text → Reformat Document** to apply the preset, then review and save. For example:
+
+```css
+.example
+{
+	color: red;
+}
+```
+
+The preset sets `initializationOptions.css.format.braceStyle` to `"expand"`. This is a formatting preference, not a lint rule: same-line braces do not produce warnings. To return to same-line braces, select **Default** or set `braceStyle` to `"collapse"` in your own configuration.
+
+Indentation comes from BBEdit's document settings. Turn **Auto-Expand Tabs** off to use tabs, or on to use spaces, and choose your preferred tab width. The preset does not change these preferences. VS Code's `editor.insertSpaces` and `editor.formatOnSave` settings do not belong in this configuration. Formatting remains manual.
 
 ## Use and settings
 
