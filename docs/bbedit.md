@@ -23,20 +23,20 @@ In Settings → Languages → Custom Settings, select **CSS**, then edit its **S
 - Command: your absolute Node.js path (`command -v node`).
 - Arguments: `/absolute/path/to/vscode-css-languageservice/server/cssServer.mjs --stdio`
 - Language ID: `css`.
-- Configuration: `Default`, or `CSS-Allman` after installing the optional preset below.
+- Configuration: `Default`, or `CSS-Fork` after installing the optional preset below.
 
 The adapter supports push diagnostics, property-name quick fixes, document/range formatting, completion and hover. It does not advertise navigation, rename, workspace indexing, filesystem path completion, custom data loading or SCSS/LESS support. The underlying library retains its existing CSS/SCSS/LESS APIs. Remove the CSS custom server setting to undo this installation.
 
-## Optional Allman formatting
+## Optional formatting and lint preset
 
-The included [CSS-Allman.json](CSS-Allman.json) preset puts opening braces on their own lines. From the checkout root, copy it into BBEdit's configuration folder:
+The included [CSS-Fork.json](CSS-Fork.json) preset enables CSS validation, additional lint warnings and Allman brace warnings and formatting (block braces on their own lines). From the checkout root, copy it into BBEdit's configuration folder:
 
 ```sh
 mkdir -p "$HOME/Library/Application Support/BBEdit/Language Servers/Configuration"
-cp -i docs/CSS-Allman.json "$HOME/Library/Application Support/BBEdit/Language Servers/Configuration/"
+cp -i docs/CSS-Fork.json "$HOME/Library/Application Support/BBEdit/Language Servers/Configuration/"
 ```
 
-In **Settings → Languages → Custom Settings → CSS → Server**, choose **CSS-Allman** from the **Configuration** menu and click **OK**. If the new preset does not appear or take effect, restart BBEdit and select it again.
+In **Settings → Languages → Custom Settings → CSS → Server**, choose **CSS-Fork** from the **Configuration** menu and click **OK**. If the new preset does not appear or take effect, restart BBEdit and select it again.
 
 Use **Text → Reformat Document** to apply the preset, then review and save. For example:
 
@@ -47,7 +47,9 @@ Use **Text → Reformat Document** to apply the preset, then review and save. Fo
 }
 ```
 
-The preset sets `initializationOptions.css.format.braceStyle` to `"expand"`. This is a formatting preference, not a lint rule: same-line braces do not produce warnings. To return to same-line braces, select **Default** or set `braceStyle` to `"collapse"` in your own configuration.
+The preset warns about unknown properties, duplicate properties, empty rules and `!important`, and sets invalid hex-color lengths to error severity. Invalid hex values may be reported as parser errors.
+
+For formatting, the preset sets `initializationOptions.css.format.braceStyle` to `"expand"`. The separate `initializationOptions.css.lint.allmanBraces` setting enables warnings for block braces sharing a line with other content. It accepts `"ignore"`, `"warning"` or `"error"` and defaults to `"ignore"` outside this preset. To return to same-line braces, select **Default**, or set `format.braceStyle` to `"collapse"` and `lint.allmanBraces` to `"ignore"` in your own configuration.
 
 Indentation comes from BBEdit's document settings. Turn **Auto-Expand Tabs** off to use tabs, or on to use spaces, and choose your preferred tab width. The preset does not change these preferences. VS Code's `editor.insertSpaces` and `editor.formatOnSave` settings do not belong in this configuration. Formatting remains manual.
 
@@ -72,6 +74,12 @@ For custom settings, place a JSON file in BBEdit's `Language Servers/Configurati
 ```
 
 The server also requests the `css` workspace configuration section per document. Workspace settings override initialization defaults. Set `validate: false` to disable diagnostics and fallback quick fixes, or `format.enable: false` to disable formatting. A configuration notification refreshes open documents; otherwise restart the server after changing settings.
+
+## Allman warnings and quick fixes
+
+Open `server/fixtures/allman.css` with **CSS-Fork** selected. Expect two warnings, one for each brace. In BBEdit 16.1, select the affected line (including its brace), right-click a word in the selection and choose **Code Actions → Move brace to its own line**. Right-clicking a bare punctuation character may not expose the Code Actions menu. Applying both fixes clears the warnings.
+
+The rule checks parsed block braces, including nested rules, media queries and keyframes. Braces in strings, comments and custom-property values are excluded. Empty blocks must also place their braces on separate lines. Fixes adjust only the brace and adjacent horizontal whitespace, preserve line-ending style, and revalidate against the current document. Declaration indentation is handled by **Reformat Document**, not this lint rule. A whole-document reformat with the preset also corrects brace layout.
 
 ## Compatibility and validation
 

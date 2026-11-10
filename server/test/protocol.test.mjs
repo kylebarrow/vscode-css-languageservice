@@ -51,6 +51,14 @@ for (const documentChanges of [false, true]) {
 		const formatParams = { textDocument: { uri }, options: { tabSize: 4, insertSpaces: false } };
 		const formatted = await connection.sendRequest('textDocument/formatting', formatParams);
 		assert.match(TextDocument.applyEdits(TextDocument.create(uri, 'css', 2, fixed), formatted), /\n\tdisplay: block;/);
+		config = { lint: { allmanBraces: 'warning' }, format: { braceStyle: 'expand' } };
+		await connection.sendNotification('workspace/didChangeConfiguration', { settings: {} });
+		await until(() => publications.at(-1).diagnostics.filter(d => d.code === 'allmanBraces').length === 2);
+		const braceActions = await connection.sendRequest('textDocument/codeAction', { textDocument: { uri }, range: { start: { line: 0, character: 0 }, end: { line: 0, character: fixed.length } }, context: { diagnostics: [] } });
+		assert.equal(braceActions.length, 2);
+		assert.ok(braceActions.every(a => a.title === 'Move brace to its own line'));
+		const allman = await connection.sendRequest('textDocument/formatting', formatParams);
+		assert.match(TextDocument.applyEdits(TextDocument.create(uri, 'css', 2, fixed), allman), /\.example\n\{/);
 		config = { validate: false, format: { enable: false } };
 		await connection.sendNotification('workspace/didChangeConfiguration', { settings: {} });
 		assert.deepEqual(await connection.sendRequest('textDocument/formatting', formatParams), []);

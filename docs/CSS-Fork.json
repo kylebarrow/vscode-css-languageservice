@@ -1,0 +1,18 @@
+{
+  "initializationOptions": {
+    "css": {
+      "format": {
+        "braceStyle": "expand"
+      },
+      "validate": true,
+      "lint": {
+        "unknownProperties": "warning",
+        "duplicateProperties": "warning",
+        "emptyRules": "warning",
+        "hexColorLength": "error",
+        "important": "warning",
+        "allmanBraces": "warning"
+      }
+    }
+  }
+}

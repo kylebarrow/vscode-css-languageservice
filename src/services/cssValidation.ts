@@ -8,6 +8,7 @@ import * as nodes from '../parser/cssNodes.js';
 import { LintConfigurationSettings, Rules } from './lintRules.js';
 import { LintVisitor } from './lint.js';
 import { TextDocument, Range, Diagnostic, DiagnosticSeverity, LanguageSettings } from '../cssLanguageTypes.js';
+import { allmanBraceProblems } from './allmanBraces.js';
 import { CSSDataManager } from '../languageFacts/dataManager.js';
 
 export class CSSValidation {
@@ -29,6 +30,13 @@ export class CSSValidation {
 		const entries: nodes.IMarker[] = [];
 		entries.push.apply(entries, nodes.ParseErrorCollector.entries(stylesheet));
 		entries.push.apply(entries, LintVisitor.entries(stylesheet, document, new LintConfigurationSettings(settings && settings.lint), this.cssDataManager));
+
+		const allmanLevel = new LintConfigurationSettings(settings?.lint).getRule(Rules.AllmanBraces);
+		if (allmanLevel !== nodes.Level.Ignore) {
+			for (const problem of allmanBraceProblems(document, stylesheet)) {
+				entries.push(new nodes.Marker(stylesheet, Rules.AllmanBraces, allmanLevel, undefined, problem.offset, 1));
+			}
+		}
 
 		const ruleIds: string[] = [];
 		for (const r in Rules) {

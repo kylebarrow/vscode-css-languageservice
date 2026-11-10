@@ -28,6 +28,7 @@ export class Setting {
 }
 
 export const Rules = {
+	AllmanBraces: new Rule('allmanBraces', l10n.t("Place block braces on their own lines (Allman style)."), Ignore),
 	AllVendorPrefixes: new Rule('compatibleVendorPrefixes', l10n.t("When using a vendor-specific prefix make sure to also include all other vendor-specific properties"), Ignore),
 	IncludeStandardPropertyWhenUsingVendorPrefix: new Rule('vendorPrefix', l10n.t("When using a vendor-specific prefix also include the standard property"), Warning),
 	DuplicateDeclarations: new Rule('duplicateProperties', l10n.t("Do not use duplicate style definitions"), Ignore),

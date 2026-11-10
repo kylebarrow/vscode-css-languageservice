@@ -12,6 +12,7 @@ import {
 	TextDocumentEdit, VersionedTextDocumentIdentifier, TextDocument, ClientCapabilities
 } from '../cssLanguageTypes.js';
 import * as l10n from '@vscode/l10n';
+import { allmanBraceProblems, AllmanBraceProblem } from './allmanBraces.js';
 import { CSSValidation } from './cssValidation.js';
 import { CSSDataManager } from '../languageFacts/dataManager.js';
 
@@ -40,9 +41,13 @@ export class CSSCodeActions {
 			const selectionEnd = document.offsetAt(range.end);
 			return selectionStart === selectionEnd ? start <= selectionStart && selectionStart <= end : start < selectionEnd && selectionStart < end;
 		});
+		const currentAllmanDiagnostics = diagnostics.some(item => item.code === Rules.AllmanBraces.id)
+			? this.validation.doValidation(document, stylesheet).filter(item => item.code === Rules.AllmanBraces.id) : [];
+		const allmanOffsets = new Set(currentAllmanDiagnostics.map(item => document.offsetAt(item.range.start)));
+		const allmanProblems = allmanOffsets.size > 0 ? allmanBraceProblems(document, stylesheet).filter(item => allmanOffsets.has(item.offset)) : [];
 		if (diagnostics.length > 0) {
 			for (const diagnostic of diagnostics) {
-				this.appendFixesForMarker(document, stylesheet, diagnostic, result);
+				this.appendFixesForMarker(document, stylesheet, diagnostic, result, allmanProblems);
 			}
 		}
 		return result;
@@ -89,8 +94,22 @@ export class CSSCodeActions {
 		}
 	}
 
-	private appendFixesForMarker(document: TextDocument, stylesheet: nodes.Stylesheet, marker: Diagnostic, result: CodeAction[]): void {
+	private appendFixesForMarker(document: TextDocument, stylesheet: nodes.Stylesheet, marker: Diagnostic, result: CodeAction[], allmanProblems: AllmanBraceProblem[]): void {
 
+		if (marker.code === Rules.AllmanBraces.id) {
+			// Recompute from the current parse rather than trusting client-supplied edits.
+			const offset = document.offsetAt(marker.range.start);
+			const problem = allmanProblems.find(item => item.offset === offset);
+			if (problem) {
+				const edit: WorkspaceEdit = this.clientCapabilities === undefined || this.clientCapabilities.workspace?.workspaceEdit?.documentChanges === true
+					? { documentChanges: [TextDocumentEdit.create(VersionedTextDocumentIdentifier.create(document.uri, document.version), [problem.edit])] }
+					: { changes: { [document.uri]: [problem.edit] } };
+				const action = CodeAction.create(l10n.t('Move brace to its own line'), edit, CodeActionKind.QuickFix);
+				action.diagnostics = [marker];
+				result.push(action);
+			}
+			return;
+		}
 		if (marker.code !== Rules.UnknownProperty.id) {
 			return;
 		}
